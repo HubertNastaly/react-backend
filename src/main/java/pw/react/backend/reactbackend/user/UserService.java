@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class UserService
@@ -22,8 +23,22 @@ public class UserService
         return new ArrayList<UserEntity>();
     }
 
-//    public void ifUserCreated(String login)
-//    {
-//        UserEntity usersWithLogin = userRepository.findByLogin(login);
-//    }
+    public boolean isUserCreated(String login)
+    {
+        if (userRepository.findByLogin(login) != null)
+        {
+            return true;
+        }
+        return false;
+    }
+
+    public UserEntity saveUser(UserEntity user)
+    {
+        return userRepository.save(user);
+    }
+
+    public Optional<UserEntity> findUserById(Long id)
+    {
+        return userRepository.findById(id);
+    }
 }
