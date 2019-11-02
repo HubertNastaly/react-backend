@@ -47,6 +47,22 @@ public class UserService
         Optional<UserEntity> foundUser = userRepository.findById(user.getId());
         if(foundUser.isPresent())
         {
+            if(user.getFirstName() == null)
+            {
+                user.setFirstName(foundUser.get().getFirstName());
+            }
+            if(user.getLastName() == null)
+            {
+                user.setLastName(foundUser.get().getLastName());
+            }
+            if(user.getLogin() == null)
+            {
+                user.setLogin(foundUser.get().getLogin());
+            }
+            if(user.getDateOfBirth() == null)
+            {
+                user.setDateOfBirth(foundUser.get().getDateOfBirth());
+            }
             return userRepository.save(user);
         }
         throw new ResourceNotFoundException("User with id: " + user.getId() + " does not exist");

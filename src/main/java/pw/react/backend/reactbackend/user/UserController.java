@@ -30,10 +30,7 @@ public class UserController
         {
             return ResponseEntity.ok().body("User with login: " + login + " exists in database");
         }
-        else
-        {
-            return ResponseEntity.notFound().build();
-        }
+        return ResponseEntity.notFound().build();
     }
 
     @GetMapping(path = "/{id}")
