@@ -67,6 +67,7 @@
 				<configuration>
 					<profiles>
 						<profile>dev</profile>
+						<profile>it</profile>
 					</profiles>
 				</configuration>
 			</plugin>

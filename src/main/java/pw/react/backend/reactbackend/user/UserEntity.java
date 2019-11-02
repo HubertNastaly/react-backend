@@ -47,6 +47,16 @@ public class UserEntity
         this.active = Active;
     }
 
+    public UserEntity(Long Id, String FirstName, String LastName, String Login, LocalDate DateOfBirth, boolean Active)
+    {
+        this.id = Id;
+        this.first_name = FirstName;
+        this.last_name = LastName;
+        this.login = Login;
+        this.date_of_birth = DateOfBirth;
+        this.active = Active;
+    }
+
     @Override
     public String toString() {
         return "pw.react.backend.reactbackend.usereact.backend.reactbackend.UserEntity [id=" + id + ", firstName=" + first_name +

@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pw.react.backend.reactbackend.exceptions.ResourceNotFoundException;
 
+import javax.transaction.Transactional;
 import javax.validation.Valid;
 import java.util.List;
 import java.util.Optional;
@@ -22,7 +23,7 @@ public class UserController
         return ResponseEntity.ok().body(userService.getAllUsers());
     }
 
-    @GetMapping("/by-login/{login}")
+    @GetMapping(path = "/by-login/{login}")
     public ResponseEntity<String> retrieveUserByLogin(@PathVariable String login)
     {
         if(userService.isUserCreated(login))
@@ -35,7 +36,7 @@ public class UserController
         }
     }
 
-    @GetMapping("/{id}")
+    @GetMapping(path = "/{id}")
     public ResponseEntity<UserEntity> retrieveUserById(@PathVariable Long id)
     {
         Optional<UserEntity> user = userService.findUserById(id);
@@ -46,9 +47,32 @@ public class UserController
         throw new ResourceNotFoundException("User with id " + id.toString() + "does not exist");
     }
 
+    @PutMapping(path = "")
+    public ResponseEntity<UserEntity> updateUser(@RequestBody @Valid UserEntity user)
+    {
+        return ResponseEntity.ok().body(userService.saveUser(user));
+    }
+
+    @PatchMapping(path="")
+    public ResponseEntity<UserEntity> updateUserPartial(@RequestBody @Valid UserEntity user)
+    {
+        return ResponseEntity.ok().body(userService.updateUser(user));
+    }
+
     @PostMapping(path = "")
     public ResponseEntity<UserEntity> createUser(@RequestBody @Valid UserEntity user)
     {
         return ResponseEntity.ok().body(userService.saveUser(user));
+    }
+
+    @DeleteMapping(path = "/{login}")
+    @Transactional
+    public ResponseEntity<String> deleteUser(@PathVariable String login)
+    {
+        if(userService.deleteUserByLogin(login))
+        {
+            return ResponseEntity.ok().body(String.format("User [%s] has been deleted", login));
+        }
+        throw new ResourceNotFoundException("User with login " + login + " does not exist");
     }
 }

@@ -2,6 +2,7 @@ package pw.react.backend.reactbackend.user;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import pw.react.backend.reactbackend.exceptions.ResourceNotFoundException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,8 +11,12 @@ import java.util.Optional;
 @Service
 public class UserService
 {
+    private UserRepository userRepository;
+
     @Autowired
-    UserRepository userRepository;
+    public UserService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
 
     public List<UserEntity> getAllUsers()
     {
@@ -35,6 +40,26 @@ public class UserService
     public UserEntity saveUser(UserEntity user)
     {
         return userRepository.save(user);
+    }
+
+    public UserEntity updateUser(UserEntity user)
+    {
+        Optional<UserEntity> foundUser = userRepository.findById(user.getId());
+        if(foundUser.isPresent())
+        {
+            return userRepository.save(user);
+        }
+        throw new ResourceNotFoundException("User with id: " + user.getId() + " does not exist");
+    }
+
+    public boolean deleteUserByLogin(String login)
+    {
+        if(isUserCreated(login))
+        {
+            userRepository.deleteByLogin(login);
+            return true;
+        }
+        return false;
     }
 
     public Optional<UserEntity> findUserById(Long id)
