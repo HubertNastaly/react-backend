@@ -12,6 +12,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.http.*;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.test.context.junit4.SpringRunner;
 import pw.react.backend.reactbackend.user.UserEntity;
 import pw.react.backend.reactbackend.user.UserRepository;
@@ -27,7 +28,10 @@ public class IntegrationTests
     @LocalServerPort
     private int port;
 
+    @Autowired
     private TestRestTemplate restTemplate = new TestRestTemplate();
+    HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory();
+
     private HttpHeaders headers = new HttpHeaders();
 
     @Autowired
@@ -39,8 +43,9 @@ public class IntegrationTests
     }
 
     @Before
-    public void insertIntoDb()
+    public void setup()
     {
+        restTemplate.getRestTemplate().setRequestFactory(new HttpComponentsClientHttpRequestFactory());
 
         UserEntity user1 = new UserEntity("Jaroslaw", "Kuczynski", "jaku", LocalDate.parse("2000-12-12"), true);
         UserEntity user2 = new UserEntity("Kazimierz", "Wielki", "kawi", LocalDate.parse("2001-05-14"), true);
@@ -111,17 +116,20 @@ public class IntegrationTests
     public void testRetrieveUserById() throws JSONException {
         HttpEntity httpEntity = new HttpEntity(headers);
 
+        UserEntity foundUser = userRepository.findByLogin("jaku");
+
         ResponseEntity<String> userById1 = restTemplate.exchange(
-                createURLWithPort("/users/1"),
+                createURLWithPort("/users/" + foundUser.getId().toString()),
                 HttpMethod.GET,
                 httpEntity,
                 String.class);
 
         ResponseEntity<String> userById2 = restTemplate.exchange(
-                createURLWithPort("/users/9"),
+                createURLWithPort("/users/19"),
                 HttpMethod.GET,
                 httpEntity,
                 String.class);
+
 
 
         String response =
@@ -161,5 +169,83 @@ public class IntegrationTests
 
         JSONAssert.assertEquals(response, updatedUserResponse.getBody(), JSONCompareMode.LENIENT);
     }
+
+    @Test
+    public void testUpdateUserPartial() throws JSONException
+    {
+        UserEntity foundUser = userRepository.findByLogin("kawi");
+
+        UserEntity updatedUser = new UserEntity(foundUser.getId(), null, "Niewielki", null, null,false);
+
+        HttpEntity<UserEntity> httpEntity = new HttpEntity(updatedUser);
+
+        ResponseEntity<String> updatedUserResponse = restTemplate.exchange(
+                createURLWithPort("/users"),
+                HttpMethod.PATCH,
+                httpEntity,
+                String.class);
+
+        String response =
+                "{" +
+                "\"date_of_birth\": \"2001-05-14\"," +
+                "\"login\": \"kawi\"," +
+                "\"active\": false," +
+                "\"first_name\": \"Kazimierz\"," +
+                "\"last_name\": \"Niewielki\"" +
+                "}";
+
+        JSONAssert.assertEquals(response, updatedUserResponse.getBody(), JSONCompareMode.LENIENT);
+    }
+
+    @Test
+    public void testCreateUser() throws JSONException
+    {
+        UserEntity newUser = new UserEntity("Antoni", "Banderaz", "anba", LocalDate.parse("1996-01-11"),true);
+
+        HttpEntity<UserEntity> httpEntity = new HttpEntity(newUser);
+
+        ResponseEntity<String> updatedUserResponse = restTemplate.exchange(
+                createURLWithPort("/users"),
+                HttpMethod.POST,
+                httpEntity,
+                String.class);
+
+        String response =
+                "{" +
+                        "\"date_of_birth\": \"1996-01-11\"," +
+                        "\"login\": \"anba\"," +
+                        "\"active\": true," +
+                        "\"first_name\": \"Antoni\"," +
+                        "\"last_name\": \"Banderaz\"" +
+                        "}";
+
+        JSONAssert.assertEquals(response, updatedUserResponse.getBody(), JSONCompareMode.LENIENT);
+    }
+
+    @Test
+    public void testDeleteUser()
+    {
+        HttpEntity httpEntity = new HttpEntity(headers);
+
+        ResponseEntity<String> deleteUserResponse1 = restTemplate.exchange(
+                createURLWithPort("/users/kawi"),
+                HttpMethod.DELETE,
+                httpEntity,
+                String.class);
+
+        ResponseEntity<String> deleteUserResponse2 = restTemplate.exchange(
+                createURLWithPort("/users/abc"),
+                HttpMethod.DELETE,
+                httpEntity,
+                String.class);
+
+        String response1 = "User [kawi] has been deleted";
+        String response2 = "User with login abc does not exist";
+
+        assertThat(response1.compareTo(deleteUserResponse1.getBody()) == 0);
+        assertThat(response2.compareTo(deleteUserResponse2.getBody()) == 0);
+    }
+
+
 
 }
