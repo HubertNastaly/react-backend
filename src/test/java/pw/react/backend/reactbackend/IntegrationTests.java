@@ -32,7 +32,14 @@ public class IntegrationTests
     private TestRestTemplate restTemplate = new TestRestTemplate();
     HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory();
 
-    private HttpHeaders headers = new HttpHeaders();
+    private HttpHeaders headers = createAndInitializeHeader();
+
+    private HttpHeaders createAndInitializeHeader()
+    {
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Authorization", "secretCode");
+        return headers;
+    }
 
     @Autowired
     private UserRepository userRepository;
@@ -147,10 +154,10 @@ public class IntegrationTests
 
     @Test
     public void testUpdateUser() throws JSONException {
+        UserEntity foundUser = userRepository.findByLogin("jaku");
+        UserEntity updatedUser = new UserEntity(foundUser.getId(), "Wladyslaw", "Kurczynski", "wlaku", LocalDate.parse("2000-11-11"),false);
 
-        UserEntity updatedUser = new UserEntity((long)1, "Wladyslaw", "Kurczynski", "wlaku", LocalDate.parse("2000-11-11"),false);
-
-        HttpEntity<UserEntity> httpEntity = new HttpEntity(updatedUser);
+        HttpEntity<UserEntity> httpEntity = new HttpEntity<UserEntity>(updatedUser,headers);
 
         ResponseEntity<String> updatedUserResponse = restTemplate.exchange(
                 createURLWithPort("/users"),
@@ -177,7 +184,7 @@ public class IntegrationTests
 
         UserEntity updatedUser = new UserEntity(foundUser.getId(), null, "Niewielki", null, null,false);
 
-        HttpEntity<UserEntity> httpEntity = new HttpEntity(updatedUser);
+        HttpEntity<UserEntity> httpEntity = new HttpEntity<UserEntity>(updatedUser,headers);
 
         ResponseEntity<String> updatedUserResponse = restTemplate.exchange(
                 createURLWithPort("/users"),
@@ -202,7 +209,7 @@ public class IntegrationTests
     {
         UserEntity newUser = new UserEntity("Antoni", "Banderaz", "anba", LocalDate.parse("1996-01-11"),true);
 
-        HttpEntity<UserEntity> httpEntity = new HttpEntity(newUser);
+        HttpEntity<UserEntity> httpEntity = new HttpEntity<UserEntity>(newUser,headers);
 
         ResponseEntity<String> updatedUserResponse = restTemplate.exchange(
                 createURLWithPort("/users"),
