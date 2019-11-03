@@ -21,6 +21,8 @@ import java.time.LocalDate;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+//import org.springframework.boot.test.web.client.TestRestTemplateContextCustomizer;
+
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class IntegrationTests
@@ -30,14 +32,25 @@ public class IntegrationTests
 
     @Autowired
     private TestRestTemplate restTemplate = new TestRestTemplate();
+    //private RestTemplate restTemplate2 = new RestTemplate();
     HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory();
 
     private HttpHeaders headers = createAndInitializeHeader();
+    private HttpHeaders headersWithMap = createAndInitializeMultiValueMap();
 
     private HttpHeaders createAndInitializeHeader()
     {
+        //restTemplate.getMessageConverters().add(new MappingJackson2HttpMessageConverter());
         HttpHeaders headers = new HttpHeaders();
         headers.add("Authorization", "secretCode");
+        return headers;
+    }
+
+    private HttpHeaders createAndInitializeMultiValueMap()
+    {
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Authorization", "secretCode");
+        headers.setContentType(MediaType.APPLICATION_JSON);
         return headers;
     }
 
@@ -53,6 +66,7 @@ public class IntegrationTests
     public void setup()
     {
         restTemplate.getRestTemplate().setRequestFactory(new HttpComponentsClientHttpRequestFactory());
+        //restTemplate2.setRequestFactory(new HttpComponentsClientHttpRequestFactory());
 
         UserEntity user1 = new UserEntity("Jaroslaw", "Kuczynski", "jaku", LocalDate.parse("2000-12-12"), true);
         UserEntity user2 = new UserEntity("Kazimierz", "Wielki", "kawi", LocalDate.parse("2001-05-14"), true);
@@ -157,13 +171,18 @@ public class IntegrationTests
         UserEntity foundUser = userRepository.findByLogin("jaku");
         UserEntity updatedUser = new UserEntity(foundUser.getId(), "Wladyslaw", "Kurczynski", "wlaku", LocalDate.parse("2000-11-11"),false);
 
-        HttpEntity<UserEntity> httpEntity = new HttpEntity<UserEntity>(updatedUser,headers);
+        HttpEntity<UserEntity> httpEntity = new HttpEntity<>(updatedUser, headersWithMap);
 
         ResponseEntity<String> updatedUserResponse = restTemplate.exchange(
                 createURLWithPort("/users"),
                 HttpMethod.PUT,
                 httpEntity,
                 String.class);
+//        String updatedUserResponse = restTemplate.put(
+//                createURLWithPort("/users"),
+//                httpEntity,
+//                String.class
+//        );
 
         String response =
                 "{" +
@@ -184,13 +203,19 @@ public class IntegrationTests
 
         UserEntity updatedUser = new UserEntity(foundUser.getId(), null, "Niewielki", null, null,false);
 
-        HttpEntity<UserEntity> httpEntity = new HttpEntity<UserEntity>(updatedUser,headers);
+        HttpEntity<UserEntity> httpEntity = new HttpEntity<>(updatedUser, headersWithMap);
 
         ResponseEntity<String> updatedUserResponse = restTemplate.exchange(
                 createURLWithPort("/users"),
                 HttpMethod.PATCH,
                 httpEntity,
                 String.class);
+
+//        String updatedUserResponse = restTemplate2.patchForObject(
+//                createURLWithPort("/users"),
+//                httpEntity,
+//                String.class
+//        );
 
         String response =
                 "{" +
@@ -209,13 +234,18 @@ public class IntegrationTests
     {
         UserEntity newUser = new UserEntity("Antoni", "Banderaz", "anba", LocalDate.parse("1996-01-11"),true);
 
-        HttpEntity<UserEntity> httpEntity = new HttpEntity<UserEntity>(newUser,headers);
+        HttpEntity<UserEntity> httpEntity = new HttpEntity<>(newUser, headersWithMap);
 
         ResponseEntity<String> updatedUserResponse = restTemplate.exchange(
                 createURLWithPort("/users"),
                 HttpMethod.POST,
                 httpEntity,
                 String.class);
+
+//        String actualResponse = restTemplate.postForObject(
+//                createURLWithPort("/users"),
+//                httpEntity,
+//                String.class);
 
         String response =
                 "{" +
